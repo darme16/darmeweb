@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theekshana Saloon | Premium Barber Experience</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="https://unpkg.com/scrollreveal"></script>
+  <script src="https://unpkg.com/split-type"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #f59e0b;
+      --secondary: #1f2937;
+      --accent: #10b981;
+    }
+    
+    .text-stroke {
+      -webkit-text-stroke: 1px var(--primary);
+      color: transparent;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .blob {
+      position: absolute;
+      filter: blur(60px);
+      z-index: -1;
+      opacity: 0.3;
+    }
+    
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.15;
+    }
+    
+    .service-card {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-10px);
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .nav-link {
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    
+    .active-nav::after {
+      width: 100%;
+    }
+    
+    .booking-form input, .booking-form select, .booking-form textarea {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .booking-form input:focus, .booking-form select:focus, .booking-form textarea:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    
+    .team-card {
+      perspective: 1000px;
+    }
+    
+    .team-card-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    
+    .team-card:hover .team-card-inner {
+      transform: rotateY(180deg);
+    }
+    
+    .team-card-front, .team-card-back {
+      backface-visibility: hidden;
+    }
+    
+    .team-card-back {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased overflow-x-hidden">
+  <!-- Three.js Background -->
+  <div id="canvas-container"></div>
+  
+  <!-- Blob Background Elements -->
+  <div class="blob bg-yellow-400 w-64 h-64 rounded-full top-20 left-20"></div>
+  <div class="blob bg-emerald-400 w-96 h-96 rounded-full bottom-20 right-20"></div>
+  
+  <!-- Preloader -->
+  <div id="preloader" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+    <div class="loader animate-spin rounded-full border-4 border-t-4 border-gray-200 border-t-yellow-400 h-12 w-12"></div>
+  </div>
+  
+  <!-- Header -->
+  <header class="relative z-10">
+    <div class="container mx-auto px-6 py-8">
+      <div class="flex justify-between items-center">
+        <div class="text-3xl font-bold">
+          <span class="gradient-text">THEEKSHANA</span>
+          <span class="text-white">SALOON</span>
+        </div>
+        
+        <nav class="hidden md:flex space-x-8">
+          <a href="#home" class="nav-link active-nav text-white">Home</a>
+          <a href="#services" class="nav-link text-gray-400 hover:text-white">Services</a>
+          <a href="#gallery" class="nav-link text-gray-400 hover:text-white">Gallery</a>
+          <a href="#team" class="nav-link text-gray-400 hover:text-white">Barbers</a>
+          <a href="#contact" class="nav-link text-gray-400 hover:text-white">Contact</a>
+        </nav>
+        
+        <button class="md:hidden text-white focus:outline-none" id="mobile-menu-button">
+          <i class="fas fa-bars text-2xl"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden fixed inset-0 bg-gray-900 bg-opacity-95 z-50 flex items-center justify-center">
+    <div class="text-center">
+      <button id="close-menu" class="absolute top-6 right-6 text-white text-2xl">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-8 text-2xl">
+        <a href="#home" class="nav-link text-white">Home</a>
+        <a href="#services" class="nav-link text-gray-400 hover:text-white">Services</a>
+        <a href="#gallery" class="nav-link text-gray-400 hover:text-white">Gallery</a>
+        <a href="#team" class="nav-link text-gray-400 hover:text-white">Barbers</a>
+        <a href="#contact" class="nav-link text-gray-400 hover:text-white">Contact</a>
+      </nav>
+    </div>
+  </div>
+  
+  <!-- Hero Section -->
+  <section id="home" class="min-h-screen flex items-center relative z-10 pt-20">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col lg:flex-row items-center">
+        <div class="lg:w-1/2 mb-12 lg:mb-0">
+          <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <span class="text-stroke">PREMIUM</span>
+            <span class="gradient-text block">BARBER EXPERIENCE</span>
+          </h1>
+          <p class="text-xl text-gray-300 mb-8 max-w-lg">
+            Where precision meets style. Our master barbers craft your perfect look with artistry and attention to detail.
+          </p>
+          <div class="flex space-x-4">
+            <a href="#booking" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105">
+              Book Now
+            </a>
+            <a href="#services" class="border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-gray-900 font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105">
+              Our Services
+            </a>
+          </div>
+        </div>
+        
+        <div class="lg:w-1/2 relative">
+          <!-- p5.js Barber Animation -->
+          <div id="barber-sketch" class="w-full h-96 lg:h-auto"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Stats Section -->
+  <section class="py-16 bg-gray-800 bg-opacity-50 backdrop-blur-lg">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div class="p-6">
+          <div class="text-4xl font-bold text-yellow-400 mb-2" id="clients-count">0</div>
+          <div class="text-gray-300">Happy Clients</div>
+        </div>
+        <div class="p-6">
+          <div class="text-4xl font-bold text-yellow-400 mb-2" id="years-count">0</div>
+          <div class="text-gray-300">Years Experience</div>
+        </div>
+        <div class="p-6">
+          <div class="text-4xl font-bold text-yellow-400 mb-2" id="services-count">0</div>
+          <div class="text-gray-300">Services Offered</div>
+        </div>
+        <div class="p-6">
+          <div class="text-4xl font-bold text-yellow-400 mb-2" id="barbers-count">0</div>
+          <div class="text-gray-300">Master Barbers</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Services Section -->
+  <section id="services" class="py-20 relative">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">
+          <span class="gradient-text">OUR SERVICES</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          Premium grooming services tailored to your unique style and personality
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Service Card 1 -->
+        <div class="service-card rounded-xl p-8">
+          <div class="text-yellow-400 text-4xl mb-4">
+            <i class="fas fa-cut"></i>
+          </div>
+          <h3 class="text-2xl font-bold mb-3">Precision Haircut</h3>
+          <p class="text-gray-300 mb-4">
+            Expertly crafted haircuts using the latest techniques and tools for a flawless finish.
+          </p>
+          <div class="flex justify-between items-center">
+            <span class="text-yellow-400 font-bold text-xl">Rs. 800</span>
+            <span class="text-sm text-gray-400">60 min</span>
+          </div>
+        </div>
+        
+        <!-- Service Card 2 -->
+        <div class="service-card rounded-xl p-8">
+          <div class="text-yellow-400 text-4xl mb-4">
+            <i class="fas fa-male"></i>
+          </div>
+          <h3 class="text-2xl font-bold mb-3">Royal Beard Trim</h3>
+          <p class="text-gray-300 mb-4">
+            Detailed beard shaping and grooming with hot towel treatment for ultimate comfort.
+          </p>
+          <div class="flex justify-between items-center">
+            <span class="text-yellow-400 font-bold text-xl">Rs. 600</span>
+            <span class="text-sm text-gray-400">45 min</span>
+          </div>
+        </div>
+        
+        <!-- Service Card 3 -->
+        <div class="service-card rounded-xl p-8">
+          <div class="text-yellow-400 text-4xl mb-4">
+            <i class="fas fa-spa"></i>
+          </div>
+          <h3 class="text-2xl font-bold mb-3">Signature Facial</h3>
+          <p class="text-gray-300 mb-4">
+            Rejuvenating facial treatment with premium products for refreshed, vibrant skin.
+          </p>
+          <div class="flex justify-between items-center">
+            <span class="text-yellow-400 font-bold text-xl">Rs. 1200</span>
+            <span class="text-sm text-gray-400">75 min</span>
+          </div>
+        </div>
+        
+        <!-- Service Card 4 -->
+        <div class="service-card rounded-xl p-8">
+          <div class="text-yellow-400 text-4xl mb-4">
+            <i class="fas fa-paint-brush"></i>
+          </div>
+          <h3 class="text-2xl font-bold mb-3">Hair Coloring</h3>
+          <p class="text-gray-300 mb-4">
+            Professional coloring services using premium, long-lasting dyes for vibrant results.
+          </p>
+          <div class="flex justify-between items-center">
+            <span class="text-yellow-400 font-bold text-xl">Rs. 1500</span>
+            <span class="text-sm text-gray-400">90 min</span>
+          </div>
+        </div>
+        
+        <!-- Service Card 5 -->
+        <div class="service-card rounded-xl p-8">
+          <div class="text-yellow-400 text-4xl mb-4">
+            <i class="fas fa-fire"></i>
+          </div>
+          <h3 class="text-2xl font-bold mb-3">Hair Straightening</h3>
+          <p class="text-gray-300 mb-4">
+            Advanced keratin treatment for smooth, manageable hair that lasts for weeks.
+          </p>
+          <div class="flex justify-between items-center">
+            <span class="text-yellow-400 font-bold text-xl">Rs. 2500</span>
+            <span class="text-sm text-gray-400">120 min</span>
+          </div>
+        </div>
+        
+        <!-- Service Card 6 -->
+        <div class="service-card rounded-xl p-8">
+          <div class="text-yellow-400 text-4xl mb-4">
+            <i class="fas fa-crown"></i>
+          </div>
+          <h3 class="text-2xl font-bold mb-3">Executive Package</h3>
+          <p class="text-gray-300 mb-4">
+            Complete grooming experience including haircut, beard trim, facial, and massage.
+          </p>
+          <div class="flex justify-between items-center">
+            <span class="text-yellow-400 font-bold text-xl">Rs. 3500</span>
+            <span class="text-sm text-gray-400">180 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Gallery Section -->
+  <section id="gallery" class="py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">
+          <span class="gradient-text">OUR WORK</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          Explore our portfolio of exceptional transformations
+        </p>
+      </div>
+      
+      <!-- p5.js Interactive Gallery -->
+      <div id="gallery-sketch" class="w-full h-96 mb-8"></div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- Gallery items will be generated by p5.js -->
+      </div>
+    </div>
+  </section>
+  
+  <!-- Team Section -->
+  <section id="team" class="py-20 bg-gray-800 bg-opacity-50">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">
+          <span class="gradient-text">MEET OUR BARBERS</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          Our master barbers bring years of experience and artistry to every cut
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Barber 1 -->
+        <div class="team-card">
+          <div class="team-card-inner relative w-full h-96 rounded-xl overflow-hidden">
+            <div class="team-card-front absolute w-full h-full bg-gray-700 flex items-end">
+              <div class="p-6 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 class="text-2xl font-bold">Kamal Perera</h3>
+                <p class="text-yellow-400">Master Barber</p>
+              </div>
+            </div>
+            <div class="team-card-back absolute w-full h-full bg-gray-800 p-6 flex flex-col justify-center">
+              <h3 class="text-2xl font-bold mb-2">Kamal Perera</h3>
+              <p class="text-yellow-400 mb-4">15 Years Experience</p>
+              <p class="text-gray-300 mb-4">Specializes in classic and modern cuts with precision scissor work.</p>
+              <div class="flex space-x-2">
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Fades</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Beards</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Styling</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barber 2 -->
+        <div class="team-card">
+          <div class="team-card-inner relative w-full h-96 rounded-xl overflow-hidden">
+            <div class="team-card-front absolute w-full h-full bg-gray-700 flex items-end">
+              <div class="p-6 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 class="text-2xl font-bold">Nimal Fernando</h3>
+                <p class="text-yellow-400">Beard Specialist</p>
+              </div>
+            </div>
+            <div class="team-card-back absolute w-full h-full bg-gray-800 p-6 flex flex-col justify-center">
+              <h3 class="text-2xl font-bold mb-2">Nimal Fernando</h3>
+              <p class="text-yellow-400 mb-4">10 Years Experience</p>
+              <p class="text-gray-300 mb-4">Expert in beard shaping and grooming with hot towel treatments.</p>
+              <div class="flex space-x-2">
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Beards</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Shaves</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Grooming</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barber 3 -->
+        <div class="team-card">
+          <div class="team-card-inner relative w-full h-96 rounded-xl overflow-hidden">
+            <div class="team-card-front absolute w-full h-full bg-gray-700 flex items-end">
+              <div class="p-6 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 class="text-2xl font-bold">Sunil Bandara</h3>
+                <p class="text-yellow-400">Color Expert</p>
+              </div>
+            </div>
+            <div class="team-card-back absolute w-full h-full bg-gray-800 p-6 flex flex-col justify-center">
+              <h3 class="text-2xl font-bold mb-2">Sunil Bandara</h3>
+              <p class="text-yellow-400 mb-4">12 Years Experience</p>
+              <p class="text-gray-300 mb-4">Specializes in hair coloring and advanced chemical treatments.</p>
+              <div class="flex space-x-2">
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Coloring</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Straightening</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Treatments</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barber 4 -->
+        <div class="team-card">
+          <div class="team-card-inner relative w-full h-96 rounded-xl overflow-hidden">
+            <div class="team-card-front absolute w-full h-full bg-gray-700 flex items-end">
+              <div class="p-6 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 class="text-2xl font-bold">Amal Silva</h3>
+                <p class="text-yellow-400">Style Director</p>
+              </div>
+            </div>
+            <div class="team-card-back absolute w-full h-full bg-gray-800 p-6 flex flex-col justify-center">
+              <h3 class="text-2xl font-bold mb-2">Amal Silva</h3>
+              <p class="text-yellow-400 mb-4">18 Years Experience</p>
+              <p class="text-gray-300 mb-4">Creates custom styles tailored to each client's personality and lifestyle.</p>
+              <div class="flex space-x-2">
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Styling</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Consultation</span>
+                <span class="bg-gray-700 px-3 py-1 rounded-full text-sm">Trends</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Testimonials Section -->
+  <section class="py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">
+          <span class="gradient-text">CLIENT TESTIMONIALS</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          What our clients say about their experience
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Testimonial 1 -->
+        <div class="bg-gray-800 rounded-xl p-8">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-gray-900 font-bold mr-4">DP</div>
+            <div>
+              <h4 class="font-bold">Dinesh Perera</h4>
+              <div class="flex text-yellow-400 text-sm">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-300 italic">
+            "The best haircut I've ever had! Kamal took the time to understand exactly what I wanted and delivered beyond my expectations."
+          </p>
+        </div>
+        
+        <!-- Testimonial 2 -->
+        <div class="bg-gray-800 rounded-xl p-8">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-gray-900 font-bold mr-4">SR</div>
+            <div>
+              <h4 class="font-bold">Saman Rajapaksa</h4>
+              <div class="flex text-yellow-400 text-sm">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-300 italic">
+            "Nimal's beard grooming is exceptional. I won't trust anyone else with my beard now. The hot towel treatment is heavenly!"
+          </p>
+        </div>
+        
+        <!-- Testimonial 3 -->
+        <div class="bg-gray-800 rounded-xl p-8">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 rounded-full bg-yellow-400 flex items-center justify-center text-gray-900 font-bold mr-4">JW</div>
+            <div>
+              <h4 class="font-bold">Janith Weerasinghe</h4>
+              <div class="flex text-yellow-400 text-sm">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-300 italic">
+            "The Executive Package is worth every rupee. Three hours of pure relaxation and grooming perfection. I feel like a new man!"
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Booking Section -->
+  <section id="booking" class="py-20 bg-gray-800 bg-opacity-50">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
+        <div class="md:flex">
+          <div class="md:w-1/2 bg-yellow-500 p-8 flex flex-col justify-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Ready for Your Transformation?</h2>
+            <p class="text-gray-800 mb-6">
+              Book your appointment today and experience premium barber services tailored just for you.
+            </p>
+            <div class="space-y-4">
+              <div class="flex items-center">
+                <i class="fas fa-phone-alt text-gray-900 mr-3"></i>
+                <span class="font-bold text-gray-900">077-1234567</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-map-marker-alt text-gray-900 mr-3"></i>
+                <span class="font-bold text-gray-900">123 Main Street, Colombo 03</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-clock text-gray-900 mr-3"></i>
+                <span class="font-bold text-gray-900">Open Daily 9AM - 8PM</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="md:w-1/2 p-8">
+            <h3 class="text-2xl font-bold mb-6">Book Appointment</h3>
+            <form class="booking-form space-y-4">
+              <div>
+                <label class="block text-gray-400 mb-1">Full Name</label>
+                <input type="text" class="w-full px-4 py-3 rounded-lg">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Phone Number</label>
+                <input type="tel" class="w-full px-4 py-3 rounded-lg">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Service</label>
+                <select class="w-full px-4 py-3 rounded-lg">
+                  <option>Select Service</option>
+                  <option>Precision Haircut</option>
+                  <option>Royal Beard Trim</option>
+                  <option>Signature Facial</option>
+                  <option>Hair Coloring</option>
+                  <option>Hair Straightening</option>
+                  <option>Executive Package</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Barber Preference</label>
+                <select class="w-full px-4 py-3 rounded-lg">
+                  <option>No Preference</option>
+                  <option>Kamal Perera</option>
+                  <option>Nimal Fernando</option>
+                  <option>Sunil Bandara</option>
+                  <option>Amal Silva</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Date & Time</label>
+                <input type="datetime-local" class="w-full px-4 py-3 rounded-lg">
+              </div>
+              <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-4 rounded-lg transition duration-300">
+                Confirm Booking
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Contact Section -->
+  <section id="contact" class="py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">
+          <span class="gradient-text">VISIT US</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          We're located in the heart of the city for your convenience
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-gray-800 rounded-xl p-8">
+          <div class="text-yellow-400 text-3xl mb-4">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Location</h3>
+          <p class="text-gray-300">123 Main Street, Colombo 03</p>
+          <p class="text-gray-300">Sri Lanka</p>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl p-8">
+          <div class="text-yellow-400 text-3xl mb-4">
+            <i class="fas fa-clock"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Hours</h3>
+          <p class="text-gray-300">Monday - Friday: 9AM - 8PM</p>
+          <p class="text-gray-300">Saturday: 9AM - 9PM</p>
+          <p class="text-gray-300">Sunday: 10AM - 6PM</p>
+        </div>
+        
+        <div class="bg-gray-800 rounded-xl p-8">
+          <div class="text-yellow-400 text-3xl mb-4">
+            <i class="fas fa-phone-alt"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Contact</h3>
+          <p class="text-gray-300">Phone: 077-1234567</p>
+          <p class="text-gray-300">Email: hello@theekshanasalon.com</p>
+          <div class="flex space-x-4 mt-4 text-xl">
+            <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-whatsapp"></i></a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Three.js Interactive Map -->
+      <div id="map-container" class="w-full h-96 mt-12 rounded-xl overflow-hidden"></div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer class="bg-gray-900 py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">Theekshana Saloon</h3>
+          <p class="text-gray-400">
+            Premium barber services with a modern touch. Where style meets precision.
+          </p>
+        </div>
+        
+        <div>
+          <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><a href="#home" class="text-gray-400 hover:text-yellow-400">Home</a></li>
+            <li><a href="#services" class="text-gray-400 hover:text-yellow-400">Services</a></li>
+            <li><a href="#gallery" class="text-gray-400 hover:text-yellow-400">Gallery</a></li>
+            <li><a href="#team" class="text-gray-400 hover:text-yellow-400">Our Barbers</a></li>
+            <li><a href="#contact" class="text-gray-400 hover:text-yellow-400">Contact</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-xl font-bold mb-4">Services</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-yellow-400">Haircuts</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-yellow-400">Beard Grooming</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-yellow-400">Facials</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-yellow-400">Hair Treatments</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-yellow-400">Executive Packages</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-xl font-bold mb-4">Newsletter</h3>
+          <p class="text-gray-400 mb-4">
+            Subscribe for exclusive offers and grooming tips
+          </p>
+          <form class="flex">
+            <input type="email" placeholder="Your email" class="px-4 py-2 rounded-l-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 w-full">
+            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-4 py-2 rounded-r-lg">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div class="text-gray-400 mb-4 md:mb-0">
+          &copy; 2025 Theekshana Saloon. All rights reserved.
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="text-gray-400 hover:text-yellow-400"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Back to Top Button -->
+  <button id="back-to-top" class="fixed bottom-8 right-8 bg-yellow-500 text-gray-900 w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-yellow-600 transition duration-300 hidden">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+  
+  <script>
+    // Three.js Background
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    
+    // Create floating hair-like particles
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particleCount = 1000;
+    
+    const posArray = new Float32Array(particleCount * 3);
+    for(let i = 0; i < particleCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 10;
+    }
+    
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    
+    const particlesMaterial = new THREE.PointsMaterial({
+      size: 0.02,
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.8
+    });
+    
+    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particlesMesh);
+    
+    camera.position.z = 3;
+    
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      particlesMesh.rotation.x += 0.0005;
+      particlesMesh.rotation.y += 0.0005;
+      
+      renderer.render(scene, camera);
+    }
+    animate();
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    
+    // p5.js Barber Sketch
+    new p5((p) => {
+      let hairLines = [];
+      let tools = [];
+      
+      p.setup = function() {
+        let canvas = p.createCanvas(p.select('#barber-sketch').width, 500);
+        canvas.parent('barber-sketch');
+        
+        // Create hair lines
+        for(let i = 0; i < 50; i++) {
+          hairLines.push({
+            x1: p.random(p.width),
+            y1: p.random(p.height * 0.6),
+            x2: p.random(p.width),
+            y2: p.random(p.height * 0.6),
+            speed: p.random(0.5, 2)
+          });
+        }
+        
+        // Create barber tools
+        tools.push({ type: 'scissors', x: p.width/2 - 100, y: p.height/2, angle: 0 });
+        tools.push({ type: 'comb', x: p.width/2 + 100, y: p.height/2, angle: 0 });
+        tools.push({ type: 'razor', x: p.width/2, y: p.height/2 + 100, angle: 0 });
+      };
+      
+      p.draw = function() {
+        p.clear();
+        p.background(0, 0);
+        
+        // Draw hair lines
+        p.stroke(245, 158, 11, 150);
+        p.strokeWeight(1);
+        
+        for(let hair of hairLines) {
+          p.line(hair.x1, hair.y1, hair.x2, hair.y2);
+          
+          // Animate hair
+          hair.y1 += hair.speed;
+          hair.y2 += hair.speed;
+          
+          if(hair.y1 > p.height || hair.y2 > p.height) {
+            hair.y1 = 0;
+            hair.y2 = p.random(p.height * 0.3);
+          }
+        }
+        
+        // Draw barber tools
+        for(let tool of tools) {
+          p.push();
+          p.translate(tool.x, tool.y);
+          p.rotate(tool.angle);
+          
+          if(tool.type === 'scissors') {
+            p.fill(200);
+            p.noStroke();
+            // Scissors blades
+            p.rect(-30, -3, 30, 6);
+            p.rect(0, -3, 30, 6, 0, 3, 3, 0);
+            // Scissors handle
+            p.fill(100);
+            p.ellipse(-25, 0, 15, 30);
+            p.ellipse(25, 0, 15, 30);
+            
+            tool.angle += 0.02;
+          } else if(tool.type === 'comb') {
+            p.fill(150);
+            p.rect(-25, -5, 50, 10);
+            // Comb teeth
+            for(let i = -20; i <= 20; i += 5) {
+              p.rect(i - 2, 5, 4, 15);
+            }
+            
+            tool.angle = p.sin(p.frameCount * 0.05) * 0.2;
+          } else if(tool.type === 'razor') {
+            p.fill(180);
+            p.rect(-30, -3, 60, 6);
+            p.fill(100);
+            p.rect(25, -5, 10, 10);
+            
+            tool.angle = p.sin(p.frameCount * 0.03) * 0.3;
+          }
+          
+          p.pop();
+        }
+        
+        // Draw title
+        p.fill(255);
+        p.textSize(24);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.text("PRECISION GROOMING", p.width/2, p.height - 50);
+      };
+      
+      p.windowResized = function() {
+        p.resizeCanvas(p.select('#barber-sketch').width, 500);
+      };
+    });
+    
+    // p5.js Gallery Sketch
+    new p5((p) => {
+      let haircuts = [];
+      let currentIndex = 0;
+      
+      p.setup = function() {
+        let canvas = p.createCanvas(p.select('#gallery-sketch').width, 300);
+        canvas.parent('gallery-sketch');
+        
+        // Create virtual haircut styles
+        for(let i = 0; i < 5; i++) {
+          haircuts.push({
+            name: ["Classic Cut", "Modern Fade", "Executive Style", "Textured Crop", "Buzz Cut"][i],
+            price: [800, 1000, 1200, 900, 600][i],
+            time: ["30min", "45min", "60min", "40min", "20min"][i]
+          });
+        }
+      };
+      
+      p.draw = function() {
+        p.clear();
+        p.background(30);
+        
+        // Draw haircut visualization
+        p.fill(245, 158, 11);
+        p.noStroke();
+        
+        // Head shape
+        p.ellipse(p.width/2, p.height/2 - 30, 150, 180);
+        
+        // Hair style based on current haircut
+        if(currentIndex === 0) { // Classic Cut
+          p.rect(p.width/2 - 75, p.height/2 - 110, 150, 40, 0, 0, 20, 20);
+        } else if(currentIndex === 1) { // Modern Fade
+          for(let i = 0; i < 10; i++) {
+            p.rect(p.width/2 - 75 + i*15, p.height/2 - 110 + i*3, 15, 40 - i*3);
+          }
+        } else if(currentIndex === 2) { // Executive Style
+          p.rect(p.width/2 - 75, p.height/2 - 110, 150, 30, 0, 0, 20, 20);
+          p.triangle(p.width/2 - 30, p.height/2 - 80, p.width/2, p.height/2 - 110, p.width/2 + 30, p.height/2 - 80);
+        } else if(currentIndex === 3) { // Textured Crop
+          for(let i = 0; i < 15; i++) {
+            p.rect(p.width/2 - 75 + i*10, p.height/2 - 110 + p.random(-5, 5), 10, 30 + p.random(-5, 5));
+          }
+        } else if(currentIndex === 4) { // Buzz Cut
+          p.rect(p.width/2 - 75, p.height/2 - 110, 150, 10);
+        }
+        
+        // Display haircut info
+        p.fill(255);
+        p.textSize(20);
+        p.textAlign(p.CENTER);
+        p.text(haircuts[currentIndex].name, p.width/2, p.height - 60);
+        p.textSize(16);
+        p.text("Rs. " + haircuts[currentIndex].price + " • " + haircuts[currentIndex].time, p.width/2, p.height - 30);
+        
+        // Navigation dots
+        for(let i = 0; i < haircuts.length; i++) {
+          p.fill(i === currentIndex ? 245 : 100);
+          p.ellipse(p.width/2 - (haircuts.length-1)*10 + i*20, p.height - 15, 10);
+        }
+      };
+      
+      p.mousePressed = function() {
+        // Check if clicked on navigation dots
+        for(let i = 0; i < haircuts.length; i++) {
+          let dotX = p.width/2 - (haircuts.length-1)*10 + i*20;
+          let dotY = p.height - 15;
+          if(p.dist(p.mouseX, p.mouseY, dotX, dotY) < 10) {
+            currentIndex = i;
+          }
+        }
+      };
+      
+      // Auto-rotate haircuts
+      setInterval(() => {
+        currentIndex = (currentIndex + 1) % haircuts.length;
+      }, 3000);
+      
+      p.windowResized = function() {
+        p.resizeCanvas(p.select('#gallery-sketch').width, 300);
+      };
+    });
+    
+    // Three.js Interactive Map
+    const mapScene = new THREE.Scene();
+    const mapCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const mapRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    mapRenderer.setSize(document.getElementById('map-container').clientWidth, document.getElementById('map-container').clientHeight);
+    document.getElementById('map-container').appendChild(mapRenderer.domElement);
+    
+    // Create simple city map with saloon location
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+    
+    // Buildings
+    for(let i = 0; i < 20; i++) {
+      const building = new THREE.Mesh(geometry, material);
+      building.position.x = (Math.random() - 0.5) * 10;
+      building.position.z = (Math.random() - 0.5) * 10;
+      building.scale.x = Math.random() * 2 + 0.5;
+      building.scale.y = Math.random() * 3 + 1;
+      building.scale.z = Math.random() * 2 + 0.5;
+      mapScene.add(building);
+    }
+    
+    // Saloon location (yellow cube)
+    const saloon = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1.5, 1),
+      new THREE.MeshBasicMaterial({ color: 0xf59e0b })
+    );
+    saloon.position.set(0, 0.75, 0);
+    mapScene.add(saloon);
+    
+    // Roads
+    const roadGeometry = new THREE.PlaneGeometry(15, 1);
+    const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+    const road1 = new THREE.Mesh(roadGeometry, roadMaterial);
+    road1.rotation.x = -Math.PI / 2;
+    road1.position.y = 0.01;
+    mapScene.add(road1);
+    
+    const road2 = new THREE.Mesh(roadGeometry, roadMaterial);
+    road2.rotation.x = -Math.PI / 2;
+    road2.rotation.z = Math.PI / 2;
+    road2.position.y = 0.01;
+    mapScene.add(road2);
+    
+    mapCamera.position.set(5, 10, 10);
+    mapCamera.lookAt(0, 0, 0);
+    
+    function animateMap() {
+      requestAnimationFrame(animateMap);
+      saloon.rotation.y += 0.01;
+      mapRenderer.render(mapScene, mapCamera);
+    }
+    animateMap();
+    
+    // Handle map container resize
+    window.addEventListener('resize', () => {
+      mapCamera.aspect = document.getElementById('map-container').clientWidth / document.getElementById('map-container').clientHeight;
+      mapCamera.updateProjectionMatrix();
+      mapRenderer.setSize(document.getElementById('map-container').clientWidth, document.getElementById('map-container').clientHeight);
+    });
+    
+    // ScrollReveal Animations
+    ScrollReveal().reveal('section', {
+      delay: 200,
+      distance: '50px',
+      origin: 'bottom',
+      interval: 100,
+      easing: 'cubic-bezier(0.5, 0, 0, 1)',
+      reset: true
+    });
+    
+    // Counter Animation
+    function animateCounter(elementId, target, duration = 2000) {
+      const element = document.getElementById(elementId);
+      const start = 0;
+      const increment = target / (duration / 16);
+      let current = start;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if(current >= target) {
+          clearInterval(timer);
+          current = target;
+        }
+        element.textContent = Math.floor(current);
+      }, 16);
+    }
+    
+    // Animate stats when they come into view
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting) {
+          animateCounter('clients-count', 1250);
+          animateCounter('years-count', 12);
+          animateCounter('services-count', 15);
+          animateCounter('barbers-count', 4);
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    statsObserver.observe(document.querySelector('#services'));
+    
+    // Mobile Menu Toggle
+    document.getElementById('mobile-menu-button').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.remove('hidden');
+    });
+    
+    document.getElementById('close-menu').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.add('hidden');
+    });
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+        
+        // Close mobile menu if open
+        document.getElementById('mobile-menu').classList.add('hidden');
+      });
+    });
+    
+    // Back to Top Button
+    const backToTopButton = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if(window.pageYOffset > 300) {
+        backToTopButton.classList.remove('hidden');
+      } else {
+        backToTopButton.classList.add('hidden');
+      }
+    });
+    
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    // Active nav link highlighting
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('nav a');
+    
+    window.addEventListener('scroll', () => {
+      let current = '';
+      
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        
+        if(pageYOffset >= sectionTop - 300) {
+          current = section.getAttribute('id');
+        }
+      });
+      
+      navLinks.forEach(link => {
+        link.classList.remove('active-nav');
+        if(link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active-nav');
+        }
+      });
+    });
+    
+    // Preloader
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('preloader').classList.add('opacity-0');
+        setTimeout(() => {
+          document.getElementById('preloader').classList.add('hidden');
+        }, 500);
+      }, 1500);
+    });
+    
+    // Split text animation for hero section
+    document.addEventListener('DOMContentLoaded', () => {
+      const heroText = document.querySelector('#home h1');
+      if(heroText) {
+        const text = new SplitType(heroText, { types: 'words, chars' });
+        gsap.from(text.chars, {
+          opacity: 0,
+          y: 20,
+          duration: 0.5,
+          stagger: 0.02,
+          ease: 'power3.out'
+        });
+      }
+    });
+  </script>
+</body>
+</html>
